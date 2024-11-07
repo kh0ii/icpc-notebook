@@ -1,28 +1,24 @@
-std::array<vector<int>, 2> manacher(const string& s) {
-  int n = s.size();
-  std::array res = {vector<int>(n + 1, 0), vector<int>(n, 0)};
-
-  for (int z = 0; z < 2; z++) {
-    for (int i = 0, l = 0, r = 0; i < n; i++) {
-      int t = r - i + !z;
-      if (i < r) res[z][i] = min(t, res[z][l + t]);
-
-      int l2 = i - res[z][i], r2 = i + res[z][i] - !z;
-      while (l2 && r2 + 1 < n && s[l2 - 1] == s[r2 + 1]) {
-        ++res[z][i];
-        --l2;
-        ++r2;
-      }
-      if (r2 > r) {
-        l = l2;
-        r = r2;
-      }
+vector<int> manacher_odd(string s) {
+    int n = s.size();
+    s = "$" + s + "^";
+    vector<int> p(n + 2);
+    int l = 1, r = 1;
+    for(int i = 1; i <= n; i++) {
+        p[i] = max(0, min(r - i, p[l + (r - i)]));
+        while(s[i - p[i]] == s[i + p[i]]) {
+            p[i]++;
+        }
+        if(i + p[i] > r) {
+            l = i - p[i], r = i + p[i];
+        }
     }
-    for (int i = 0; i < n; i++) {
-      res[z][i] = 2 * res[z][i] + z;
+    return vector<int>(begin(p) + 1, end(p) - 1);
+}
+vector<int> manacher(string s) {
+    string t;
+    for(auto c: s) {
+        t += string("#") + c;
     }
-  }
-  res[0].erase(res[0].begin(), res[0].begin() + 1);
-  res[0].pop_back();
-  return res;
+    auto res = manacher_odd(t + "#");
+    return vector<int>(begin(res) + 1, end(res) - 1);
 }

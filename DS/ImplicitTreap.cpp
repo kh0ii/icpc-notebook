@@ -4,11 +4,8 @@
 struct Treap{
     ll val;
     int prior, size;
-    
     ll sum;
-
     Treap *left, *right;
-
     Treap(ll val) : val(val), prior(rng()), size(1), sum(val), left(NULL), right(NULL) {};
 };
 

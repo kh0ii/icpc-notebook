@@ -35,3 +35,5 @@ namespace RMQ
 		int t = hb(r - l); return calc(z, calc(st[t][l], st[t][r - ( 1 << t )]));
 	}
 }
+// build: RMQ::build(n, a), a is an array (not a vector!)
+// query: RMQ::qry(l, r)

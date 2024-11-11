@@ -1,4 +1,4 @@
-// RMQ O(1): 0-indexed
+// RMQ O(1): 1-indexed
 // remember to change the constants, types
 using ll = long long;
 #define For(i, j, k) for ( int i = (j) ; i <= (k) ; i++ )

@@ -1,90 +1,44 @@
-vector<int> SA(const vector<int>& s, int upper) {
-	int n=s.size();
-	if (n == 0) return {};
-	if (n == 1) return {0};
-	if (n == 2) {
-		if (s[0] < s[1]) return {0, 1};
-		else return {1, 0};
-	}
-	vector<int> sa(n), sum_l(upper+1), sum_s(upper+1);
-	vector<bool> ls(n);
-	for (int i=n-2; i>=0; i--)
-		ls[i]=(s[i] == s[i+1]) ? ls[i+1] : (s[i] < s[i+1]);
-	for (int i = 0; i<n; i++)
-		if (!ls[i]) sum_s[s[i]]++;
-		else sum_l[s[i]+1]++;
-	for (int i=0; i<=upper; i++) {
-		sum_s[i] += sum_l[i];
-		if (i < upper) sum_l[i+1] += sum_s[i];
-	}
-	auto induce=[&](const vector<int>& lms) {
-		fill(sa.begin(), sa.end(), -1);
-		vector<int> buf(upper+1);
-		copy(sum_s.begin(), sum_s.end(), buf.begin());
-		for (auto d : lms) {
-			if (d == n) continue;
-			sa[buf[s[d]]++] = d;
+/**
+ * Author: 罗穗骞, chilli
+ * Date: 2019-04-11
+ * License: Unknown
+ * Source: Suffix array - a powerful tool for dealing with strings
+ * (Chinese IOI National team training paper, 2009)
+ * Description: Builds suffix array for a string.
+ * \texttt{sa[i]} is the starting index of the suffix which
+ * is $i$'th in the sorted suffix array.
+ * The returned vector is of size $n+1$, and \texttt{sa[0] = n}.
+ * The \texttt{lcp} array contains longest common prefixes for
+ * neighbouring strings in the suffix array:
+ * \texttt{lcp[i] = lcp(sa[i], sa[i-1])}, \texttt{lcp[0] = 0}.
+ * The input string must not contain any zero bytes.
+ * Time: O(n \log n)
+ * Status: stress-tested
+ */
+struct SuffixArray {
+	vi sa, lcp;
+	SuffixArray(string& s, int lim=256) { // or basic_string<int>
+		int n = sz(s) + 1, k = 0, a, b;
+		vi x(all(s)), y(n), ws(max(n, lim));
+		x.push_back(0), sa = lcp = y, iota(all(sa), 0);
+		for (int j = 0, p = 0; p < n; j = max(1, j * 2), lim = p) {
+			p = j, iota(all(y), n - j);
+			rep(i,0,n) if (sa[i] >= j) y[p++] = sa[i] - j;
+			fill(all(ws), 0);
+			rep(i,0,n) ws[x[i]]++;
+			rep(i,1,lim) ws[i] += ws[i - 1];
+			for (int i = n; i--;) sa[--ws[x[y[i]]]] = y[i];
+			swap(x, y), p = 1, x[sa[0]] = 0;
+			rep(i,1,n) a = sa[i - 1], b = sa[i], x[b] =
+				(y[a] == y[b] && y[a + j] == y[b + j]) ? p - 1 : p++;
 		}
-		copy(sum_l.begin(), sum_l.end(), buf.begin());
-		sa[buf[s[n-1]]++] = n-1;
-		for (int i=0; i<n; i++) {
-			int v=sa[i];
-			if (v>=1 && !ls[v-1]) sa[buf[s[v-1]]++] = v-1;
-		}
-		copy(sum_l.begin(), sum_l.end(), buf.begin());
-		for (int i=n-1; i>=0; i--) {
-			int v=sa[i];
-			if (v>=1 && ls[v-1]) sa[--buf[s[v-1]+1]] = v-1;
-		}
-	};
-	vector<int> lms_map(n+1, -1), lms;
-	int m=0;
-	for (int i=1; i<n; i++) if (!ls[i-1] && ls[i]) {
-		lms_map[i]=m++;
-		lms.push_back(i);
+		for (int i = 0, j; i < n - 1; lcp[x[i++]] = k)
+			for (k && k--, j = sa[x[i] - 1];
+					s[i + k] == s[j + k]; k++);
 	}
-	induce(lms);
-	if (m) {
-		vector<int> sorted_lms, rec_s(m);
-		for (int v : sa) if (lms_map[v] != -1) sorted_lms.push_back(v);
-		int rec_upper=0;
-		rec_s[lms_map[sorted_lms[0]]]=0;
-		for (int i=1; i<m; i++) {
-			int l=sorted_lms[i-1], r=sorted_lms[i];
-			int end_l = (lms_map[l]+1 < m) ? lms[lms_map[l]+1] : n;
-			int end_r = (lms_map[r]+1 < m) ? lms[lms_map[r]+1] : n;
-			bool same=true;
-			if (end_l-l != end_r-r) same=false;
-			else {
-				while (l < end_l) {
-					if (s[l] != s[r]) break;
-					l++, r++;
-				}
-				if (l == n || s[l] != s[r]) same=false;
-			}
-			if (!same) rec_upper++;
-			rec_s[lms_map[sorted_lms[i]]]=rec_upper;
-		}
-		auto rec_sa = SA(rec_s, rec_upper);
-		for (int i=0; i<m; i++) sorted_lms[i] = lms[rec_sa[i]];
-		induce(sorted_lms);
-	}
-	return sa;
-}
-
-vector<int> lcp_array(const vector<int>& s, const vector<int>& sa) {
-	int n=int(s.size());
-	assert(n>=1);
-	vector<int> rnk(n), lcp(n-1);
-	for (int i=0; i<n; i++) rnk[sa[i]] = i;
-	int h=0;
-	for (int i=0; i<n; i++) {
-		if (h > 0) h--;
-		if (rnk[i] == 0) continue;
-		int j=sa[rnk[i]-1];
-		for (; j+h < n && i+h < n; h++)
-			if (s[j+h] != s[i+h]) break;
-		lcp[rnk[i]-1]=h;
-	}
-	return lcp;
+};
+int64_t cnt_distinct_substrings(const std::string& s) {
+    auto lcp = LCP(s, suffix_array(s, 0, 255));
+    return s.size() * (int64_t) (s.size() + 1) / 2
+        - std::accumulate(lcp.begin(), lcp.end(), 0LL);
 }

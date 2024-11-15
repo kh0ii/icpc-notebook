@@ -1,12 +1,6 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-#ifdef LOCAL
-#include "debug.h"
-#else
-#define debug(...)
-#endif
-
 using ll = long long;
 using pii = pair<int, int>;
 
@@ -27,19 +21,10 @@ void solve(){
 
 int32_t main() {
     cin.tie(nullptr)->sync_with_stdio(0);
-    #define task "troll"
-    if(fopen(task".inp", "r")){
-        freopen(task".inp", "r", stdin);
-        freopen(task".out", "w", stdout);
-    }
     int test = 1;
-//    cin >> test;
-    for(int i = 1; i <= test; ++i){
-//        cout << "Case #" << i << ": ";
-        solve();
-    }
+    while(test--) solve();
     #ifdef LOCAL
         cerr << "\n[Time]: " << 1000.0 * clock() / CLOCKS_PER_SEC << " ms.\n";
-    #endif
+
     return 0;
 }
